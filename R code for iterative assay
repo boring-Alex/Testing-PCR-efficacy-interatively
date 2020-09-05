@@ -1,0 +1,87 @@
+#R version 3.4.4
+
+x=1 #Number of boot cycles
+
+pos=1 #Number of positive cases (start)
+
+neg=1 #Number of negative cases (start)
+
+while(neg<143){ #Calculation of Negative cases
+
+negS=sample(5.01:125.9,1) #mean and SD interval
+
+if(neg==1){
+
+boot=cbind(N0=neg,rnaAmount=negS, TYPE="Negative")
+
+neg=neg+1
+
+}else{
+
+boot1=cbind(N0=neg,rnaAmount=negS, TYPE="Negative")
+
+boot=rbind(boot, boot1)
+
+neg=neg+1
+
+}
+
+}
+
+while(pos<61){ #Calculation of Positive cases
+
+posS=sample(15848.9:251188.6,1) #mean and SD interval
+
+boot1=cbind(N0=pos,rnaAmount=posS, TYPE="Positive")
+
+boot=rbind(boot, boot1)
+
+pos=pos+1
+
+}
+
+while(x<10001){ #Bootstraping
+
+n=sample(1:202,1) #Choose sample from the Samples' list to bootstrap
+
+odd=sample(.3:.5,1) #mean and SD of RNA extraction protocol efficacy
+
+cutOff=sample(436.0:1530.0,1) #mean and SD of RNA detection Cutoff by rtPCR
+
+rna=as.numeric(boot[n,2]) #RNA load in sample bootstrap
+
+if(rna*odd*0.2>cutOff){ #RNA load * Extrction efficacy * Part of essential Sample was added to rtPCR
+
+z=1}else{z=0}
+
+if(x==1){
+
+resPCR=cbind(Type=boot[n,3],Result=z, rnaLoad=rna)
+
+}else{
+
+resPCR1= cbind(Type=boot[n,3],Result=z, rnaLoad=rna)
+
+resPCR=rbind(resPCR, resPCR1)
+
+}
+
+x=x+1
+
+}
+
+val=as.numeric(resPCR[,2])
+
+fact=resPCR[,1]
+
+val1=as.numeric(resPCR[,3])
+
+meanV=aggregate(val1~fact, FUN=mean) #PPV and NPV
+
+negLg=log(meanV[1,2])
+
+PosLg=log(meanV[2,2])
+
+print(paste("Neg Log10 = ",negLg))
+
+print(paste("Pos Log10 = ",PosLg))
